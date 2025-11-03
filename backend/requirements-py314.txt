@@ -1,6 +1,8 @@
+# Requirements for Python 3.14+ (latest versions with pre-built wheels)
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 pydantic>=2.10.0
 pydantic[email]>=2.10.0
 python-multipart>=0.0.12
 email-validator>=2.0.0
+annotated-types>=0.7.0
