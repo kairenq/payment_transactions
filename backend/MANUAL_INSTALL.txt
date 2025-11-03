@@ -1,0 +1,68 @@
+РУЧНАЯ УСТАНОВКА И ЗАПУСК
+==========================
+
+Если автоматические скрипты не работают, следуйте этим шагам:
+
+ШАГ 1: Установка зависимостей
+------------------------------
+
+Windows:
+  python -m pip install --upgrade pip
+  python -m pip install fastapi==0.104.1
+  python -m pip install uvicorn[standard]==0.24.0
+  python -m pip install pydantic==2.5.0
+  python -m pip install pydantic[email]==2.5.0
+  python -m pip install python-multipart==0.0.6
+
+Linux/Mac:
+  python3 -m pip install --upgrade pip
+  python3 -m pip install fastapi==0.104.1
+  python3 -m pip install uvicorn[standard]==0.24.0
+  python3 -m pip install pydantic==2.5.0
+  python3 -m pip install pydantic[email]==2.5.0
+  python3 -m pip install python-multipart==0.0.6
+
+
+ШАГ 2: Запуск сервера
+----------------------
+
+Способ 1 (рекомендуется):
+  Windows:  python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+  Linux/Mac: python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+Способ 2 (альтернатива):
+  Windows:  python main.py
+  Linux/Mac: python3 main.py
+
+
+ШАГ 3: Проверка
+---------------
+
+Откройте в браузере:
+  - Главная страница: http://localhost:8000
+  - API документация: http://localhost:8000/docs
+
+
+УСТРАНЕНИЕ ПРОБЛЕМ
+==================
+
+Проблема: "python не является внутренней командой"
+Решение:
+  1. Переустановите Python с python.org
+  2. При установке отметьте "Add Python to PATH"
+  3. Перезагрузите компьютер
+
+Проблема: "Fatal error in launcher"
+Решение:
+  1. Используйте "python -m pip" вместо "pip"
+  2. Или переустановите Python
+
+Проблема: "ModuleNotFoundError"
+Решение:
+  - Убедитесь что все зависимости установлены (Шаг 1)
+  - Проверьте что вы находитесь в папке backend/
+
+Проблема: Порт 8000 занят
+Решение:
+  - Измените порт: --port 8001 (или любой другой)
+  - Или завершите процесс использующий порт 8000
