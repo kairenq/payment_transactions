@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt, ExpiredSignatureError, JWTClaimsError
+from jose import JWTError, jwt, ExpiredSignatureError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -59,9 +59,6 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except ExpiredSignatureError as e:
         print(f"⏰ Token expired: {e}")
-        return None
-    except JWTClaimsError as e:
-        print(f"⚠️ JWT Claims Error: {e}")
         return None
     except JWTError as e:
         print(f"❌ JWT Error: {e}")
