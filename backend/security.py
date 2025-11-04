@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
+from jose import JWTError, jwt, ExpiredSignatureError, JWTClaimsError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 from dotenv import load_dotenv
+import traceback
 
 load_dotenv()
 
@@ -36,21 +37,45 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
+
+    print(f"🔐 Creating token with:")
+    print(f"   Data: {to_encode}")
+    print(f"   Algorithm: {ALGORITHM}")
+    print(f"   SECRET_KEY (first 20 chars): {SECRET_KEY[:20]}...")
+
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    print(f"✅ Token created: {encoded_jwt[:50]}...")
     return encoded_jwt
 
 def decode_access_token(token: str) -> Optional[dict]:
     """Decode and verify a JWT token"""
     try:
+        print(f"🔓 Attempting to decode token...")
+        print(f"   Algorithm: {ALGORITHM}")
+        print(f"   SECRET_KEY (first 20 chars): {SECRET_KEY[:20]}...")
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"✅ Token decoded successfully: {payload}")
         return payload
-    except JWTError:
+    except ExpiredSignatureError as e:
+        print(f"⏰ Token expired: {e}")
+        return None
+    except JWTClaimsError as e:
+        print(f"⚠️ JWT Claims Error: {e}")
+        return None
+    except JWTError as e:
+        print(f"❌ JWT Error: {e}")
+        print(f"   Error type: {type(e).__name__}")
+        return None
+    except Exception as e:
+        print(f"💥 Unexpected error decoding token: {e}")
+        print(f"   Error type: {type(e).__name__}")
+        print(traceback.format_exc())
         return None
 
 def get_current_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Dependency to get current user from JWT token"""
     from database import db
-    import traceback
 
     token = credentials.credentials
     print(f"🔍 Validating token: {token[:50]}...")
