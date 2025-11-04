@@ -22,7 +22,7 @@ const Layout = () => {
           p: 3,
           width: { sm: `calc(100% - 240px)` },
           minHeight: '100vh',
-          backgroundColor: '#0a1929',
+          backgroundColor: 'background.default',
         }}
       >
         <Toolbar />

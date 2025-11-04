@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,73 +13,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import AdminPage from './pages/AdminPage';
 import Layout from './components/layout/Layout';
-
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#2196f3',
-      light: '#64b5f6',
-      dark: '#1976d2',
-    },
-    secondary: {
-      main: '#26a69a',
-      light: '#4db6ac',
-      dark: '#00897b',
-    },
-    success: {
-      main: '#66bb6a',
-      light: '#81c784',
-      dark: '#4caf50',
-    },
-    error: {
-      main: '#ef5350',
-      light: '#e57373',
-      dark: '#f44336',
-    },
-    warning: {
-      main: '#ffa726',
-    },
-    info: {
-      main: '#29b6f6',
-    },
-    background: {
-      default: '#0a1929',
-      paper: '#132f4c',
-    },
-    text: {
-      primary: '#e3f2fd',
-      secondary: '#b0bec5',
-    },
-  },
-  typography: {
-    fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-  },
-  components: {
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#001e3c',
-        },
-      },
-    },
-    MuiDrawer: {
-      styleOverrides: {
-        paper: {
-          backgroundColor: '#001e3c',
-        },
-      },
-    },
-  },
-});
+import { darkTheme } from './styles/theme';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading, isAdmin } = useAuth();
@@ -100,7 +34,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <AuthProvider>
         <BrowserRouter>
@@ -142,6 +76,12 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
+          theme="dark"
+          toastStyle={{
+            background: 'rgba(30, 41, 59, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(51, 65, 85, 0.2)',
+          }}
         />
       </AuthProvider>
     </ThemeProvider>

@@ -23,6 +23,7 @@ import {
   Select,
   Grid,
   CircularProgress,
+  alpha,
 } from '@mui/material';
 import {
   Add,
@@ -33,6 +34,7 @@ import {
 import { motion } from 'framer-motion';
 import { transactionsAPI } from '../services/api';
 import { toast } from 'react-toastify';
+import { fadeIn } from '../styles/theme';
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -237,7 +239,15 @@ const TransactionsPage = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.100' }}>
+              <TableRow
+                sx={{
+                  bgcolor: alpha('#1e293b', 0.6),
+                  '& .MuiTableCell-root': {
+                    fontWeight: 600,
+                    borderBottom: `2px solid ${alpha('#3b82f6', 0.2)}`,
+                  }
+                }}
+              >
                 <TableCell>Дата</TableCell>
                 <TableCell>Категория</TableCell>
                 <TableCell>Описание</TableCell>
@@ -255,8 +265,19 @@ const TransactionsPage = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                transactions.map((transaction) => (
-                  <TableRow key={transaction.id} hover>
+                transactions.map((transaction, index) => (
+                  <TableRow
+                    key={transaction.id}
+                    component={motion.tr}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    sx={{
+                      '&:hover': {
+                        bgcolor: alpha('#3b82f6', 0.08),
+                      }
+                    }}
+                  >
                     <TableCell>
                       {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
                     </TableCell>

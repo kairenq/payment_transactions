@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  alpha,
 } from '@mui/material';
 import {
   AccountBalance,
@@ -19,6 +20,7 @@ import { motion } from 'framer-motion';
 import { analyticsAPI, transactionsAPI } from '../services/api';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-toastify';
+import { glassCard, gradients, fadeIn } from '../styles/theme';
 
 const DashboardPage = () => {
   const [stats, setStats] = useState(null);
@@ -65,12 +67,24 @@ const DashboardPage = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
   const StatCard = ({ title, value, icon, color, subtitle }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${color}22 0%, ${color}11 100%)` }}>
+    <motion.div {...fadeIn}>
+      <Card
+        sx={{
+          height: '100%',
+          ...glassCard,
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.5)})`,
+          }
+        }}
+      >
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box>
@@ -86,7 +100,14 @@ const DashboardPage = () => {
                 </Typography>
               )}
             </Box>
-            <Box sx={{ color: color, fontSize: 50 }}>
+            <Box
+              sx={{
+                color: color,
+                fontSize: 50,
+                opacity: 0.8,
+                filter: `drop-shadow(0 0 10px ${alpha(color, 0.3)})`
+              }}
+            >
               {icon}
             </Box>
           </Box>
@@ -234,50 +255,67 @@ const DashboardPage = () => {
                 <Typography color="text.secondary">Транзакций пока нет</Typography>
               ) : (
                 recentActivity.map((transaction, index) => (
-                  <Box
+                  <motion.div
                     key={transaction.id}
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      p: 2,
-                      mb: 1,
-                      bgcolor: index % 2 === 0 ? 'grey.50' : 'white',
-                      borderRadius: 1,
-                    }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: '50%',
-                          bgcolor: transaction.category_color || '#1976d2',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                        }}
-                      >
-                        {transaction.type === 'income' ? '↑' : '↓'}
-                      </Box>
-                      <Box>
-                        <Typography variant="body1" fontWeight="bold">
-                          {transaction.description || transaction.category_name || 'Без описания'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      color={transaction.type === 'income' ? 'success.main' : 'error.main'}
-                      fontWeight="bold"
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        p: 2,
+                        mb: 1,
+                        bgcolor: alpha('#1e293b', 0.4),
+                        borderRadius: 2,
+                        border: `1px solid ${alpha('#334155', 0.2)}`,
+                        backdropFilter: 'blur(10px)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          bgcolor: alpha('#1e293b', 0.6),
+                          borderColor: alpha('#3b82f6', 0.3),
+                          transform: 'translateX(8px)',
+                        },
+                      }}
                     >
-                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
-                    </Typography>
-                  </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: '12px',
+                            background: transaction.type === 'income' ? gradients.success : gradients.error,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '1.5rem',
+                            boxShadow: `0 4px 12px ${alpha(transaction.type === 'income' ? '#10b981' : '#ef4444', 0.3)}`,
+                          }}
+                        >
+                          {transaction.type === 'income' ? '↑' : '↓'}
+                        </Box>
+                        <Box>
+                          <Typography variant="body1" fontWeight="600">
+                            {transaction.description || transaction.category_name || 'Без описания'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography
+                        variant="h6"
+                        color={transaction.type === 'income' ? '#10b981' : '#ef4444'}
+                        fontWeight="bold"
+                      >
+                        {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
+                      </Typography>
+                    </Box>
+                  </motion.div>
                 ))
               )}
             </Paper>

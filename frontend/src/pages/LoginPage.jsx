@@ -7,6 +7,7 @@ import {
   Typography,
   Box,
   Link,
+  alpha,
 } from '@mui/material';
 import { AccountBalance } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -105,8 +106,17 @@ const LoginPage = () => {
               </Typography>
             </Box>
 
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
-              <Typography variant="caption" color="info.dark">
+            <Box
+              sx={{
+                mt: 3,
+                p: 2,
+                bgcolor: alpha('#3b82f6', 0.1),
+                border: `1px solid ${alpha('#3b82f6', 0.3)}`,
+                borderRadius: 2,
+                backdropFilter: 'blur(10px)',
+              }}
+            >
+              <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 500 }}>
                 Тестовый доступ: admin / admin123
               </Typography>
             </Box>
