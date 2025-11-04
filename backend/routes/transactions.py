@@ -9,14 +9,14 @@ from models import (
     UserResponse
 )
 from database import db
-from routes.auth import get_current_user
+from security import get_current_user_from_token
 
 router = APIRouter(prefix="/api/transactions", tags=["Transactions"])
 
 # ==================== КАТЕГОРИИ ====================
 
 @router.get("/categories", response_model=List[PaymentCategoryResponse])
-def get_categories(current_user: UserResponse = Depends(get_current_user)):
+def get_categories(current_user: dict = Depends(get_current_user_from_token)):
     conn = db.get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM payment_categories ORDER BY name")
@@ -27,7 +27,7 @@ def get_categories(current_user: UserResponse = Depends(get_current_user)):
 @router.post("/categories", response_model=PaymentCategoryResponse)
 def create_category(
     category: PaymentCategoryCreate,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -50,7 +50,7 @@ def create_category(
 def update_category(
     category_id: int,
     category_update: PaymentCategoryUpdate,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -88,7 +88,7 @@ def update_category(
 @router.delete("/categories/{category_id}")
 def delete_category(
     category_id: int,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -109,7 +109,7 @@ def get_transactions(
     type: Optional[str] = None,
     status: Optional[str] = None,
     category_id: Optional[int] = None,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -124,7 +124,7 @@ def get_transactions(
         LEFT JOIN payment_categories pc ON t.category_id = pc.id
         WHERE t.user_id = ?
     """
-    params = [current_user.id]
+    params = [current_user["id"]]
 
     if type:
         query += " AND t.type = ?"
@@ -147,7 +147,7 @@ def get_transactions(
 @router.get("/{transaction_id}", response_model=TransactionWithCategory)
 def get_transaction(
     transaction_id: int,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -160,7 +160,7 @@ def get_transaction(
         FROM transactions t
         LEFT JOIN payment_categories pc ON t.category_id = pc.id
         WHERE t.id = ? AND t.user_id = ?
-    """, (transaction_id, current_user.id))
+    """, (transaction_id, current_user["id"]))
     transaction = cursor.fetchone()
     conn.close()
     if not transaction:
@@ -170,7 +170,7 @@ def get_transaction(
 @router.post("/", response_model=TransactionResponse)
 def create_transaction(
     transaction: TransactionCreate,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -182,7 +182,7 @@ def create_transaction(
         (user_id, category_id, type, amount, currency, description, recipient, sender, transaction_date)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        current_user.id,
+        current_user["id"],
         transaction.category_id,
         transaction.type,
         transaction.amount,
@@ -199,7 +199,7 @@ def create_transaction(
     cursor.execute("""
         INSERT INTO transaction_history (transaction_id, user_id, action, new_status, notes)
         VALUES (?, ?, ?, ?, ?)
-    """, (transaction_id, current_user.id, 'created', 'pending', 'Transaction created'))
+    """, (transaction_id, current_user["id"], 'created', 'pending', 'Transaction created'))
     conn.commit()
 
     cursor.execute("SELECT * FROM transactions WHERE id = ?", (transaction_id,))
@@ -211,13 +211,13 @@ def create_transaction(
 def update_transaction(
     transaction_id: int,
     transaction_update: TransactionUpdate,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
 
     # Проверка существования и владельца
-    cursor.execute("SELECT * FROM transactions WHERE id = ? AND user_id = ?", (transaction_id, current_user.id))
+    cursor.execute("SELECT * FROM transactions WHERE id = ? AND user_id = ?", (transaction_id, current_user["id"]))
     old_transaction = cursor.fetchone()
     if not old_transaction:
         conn.close()
@@ -260,7 +260,7 @@ def update_transaction(
         raise HTTPException(status_code=400, detail="No fields to update")
 
     values.append(transaction_id)
-    values.append(current_user.id)
+    values.append(current_user["id"])
     query = f"UPDATE transactions SET {', '.join(update_fields)} WHERE id = ? AND user_id = ?"
 
     cursor.execute(query, values)
@@ -271,7 +271,7 @@ def update_transaction(
     cursor.execute("""
         INSERT INTO transaction_history (transaction_id, user_id, action, old_status, new_status, notes)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (transaction_id, current_user.id, 'updated', old_status, new_status, 'Transaction updated'))
+    """, (transaction_id, current_user["id"], 'updated', old_status, new_status, 'Transaction updated'))
     conn.commit()
 
     cursor.execute("SELECT * FROM transactions WHERE id = ?", (transaction_id,))
@@ -282,11 +282,11 @@ def update_transaction(
 @router.delete("/{transaction_id}")
 def delete_transaction(
     transaction_id: int,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM transactions WHERE id = ? AND user_id = ?", (transaction_id, current_user.id))
+    cursor.execute("DELETE FROM transactions WHERE id = ? AND user_id = ?", (transaction_id, current_user["id"]))
     conn.commit()
     if cursor.rowcount == 0:
         conn.close()
@@ -299,13 +299,13 @@ def delete_transaction(
 @router.get("/{transaction_id}/history", response_model=List[TransactionHistoryResponse])
 def get_transaction_history(
     transaction_id: int,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
 
     # Проверка доступа
-    cursor.execute("SELECT id FROM transactions WHERE id = ? AND user_id = ?", (transaction_id, current_user.id))
+    cursor.execute("SELECT id FROM transactions WHERE id = ? AND user_id = ?", (transaction_id, current_user["id"]))
     if not cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="Transaction not found")

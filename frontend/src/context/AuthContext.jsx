@@ -13,11 +13,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await authAPI.getCurrentUser();
       setUser(response.data);
     } catch (error) {
       setUser(null);
+      localStorage.removeItem('access_token');
     } finally {
       setLoading(false);
     }
@@ -26,7 +33,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
-      setUser(response.data);
+      const { access_token, user } = response.data;
+
+      // Save token to localStorage
+      localStorage.setItem('access_token', access_token);
+
+      // Set user state
+      setUser(user);
+
       toast.success('Успешный вход!');
       return true;
     } catch (error) {
@@ -38,7 +52,14 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      setUser(response.data);
+      const { access_token, user } = response.data;
+
+      // Save token to localStorage
+      localStorage.setItem('access_token', access_token);
+
+      // Set user state
+      setUser(user);
+
       toast.success('Регистрация успешна!');
       return true;
     } catch (error) {
@@ -50,10 +71,13 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authAPI.logout();
+    } catch (error) {
+      // Ignore errors on logout
+    } finally {
+      // Clear token and user state
+      localStorage.removeItem('access_token');
       setUser(null);
       toast.info('Вы вышли из системы');
-    } catch (error) {
-      setUser(null);
     }
   };
 

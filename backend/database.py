@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+from security import get_password_hash
 
 class Database:
     def __init__(self, db_name: str = "database.db"):
@@ -39,10 +40,14 @@ class Database:
         ''')
 
         # ОБЯЗАТЕЛЬНО: Создать дефолтного админа (НЕ ИЗМЕНЯТЬ!)
-        cursor.execute('''
-            INSERT OR IGNORE INTO users (id, username, email, password, role)
-            VALUES (1, 'admin', 'admin@admin.com', 'admin123', 'admin')
-        ''')
+        # Check if admin exists
+        cursor.execute("SELECT id FROM users WHERE id = 1")
+        if not cursor.fetchone():
+            hashed_password = get_password_hash('admin123')
+            cursor.execute('''
+                INSERT INTO users (id, username, email, password, role)
+                VALUES (1, 'admin', 'admin@admin.com', ?, 'admin')
+            ''', (hashed_password,))
 
         # Таблица категорий платежей
         cursor.execute('''

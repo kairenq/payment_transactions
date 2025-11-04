@@ -3,17 +3,17 @@ from typing import List
 import sqlite3
 from models import UserResponse, UserUpdate
 from database import db
-from routes.auth import get_current_user
+from security import get_current_user_from_token
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
-def require_admin(current_user: UserResponse = Depends(get_current_user)):
-    if current_user.role != "admin":
+def require_admin(current_user: dict = Depends(get_current_user_from_token)):
+    if current_user.get('role') != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
 @router.get("/users", response_model=List[UserResponse])
-def get_all_users(admin: UserResponse = Depends(require_admin)):
+def get_all_users(admin: dict = Depends(require_admin)):
     conn = db.get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users ORDER BY created_at DESC")
@@ -22,7 +22,7 @@ def get_all_users(admin: UserResponse = Depends(require_admin)):
     return users
 
 @router.put("/users/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user_update: UserUpdate, admin: UserResponse = Depends(require_admin)):
+def update_user(user_id: int, user_update: UserUpdate, admin: dict = Depends(require_admin)):
     conn = db.get_connection()
     cursor = conn.cursor()
     update_fields = []
@@ -57,7 +57,7 @@ def update_user(user_id: int, user_update: UserUpdate, admin: UserResponse = Dep
         raise HTTPException(status_code=400, detail="Username or email already exists")
 
 @router.delete("/users/{user_id}")
-def delete_user(user_id: int, admin: UserResponse = Depends(require_admin)):
+def delete_user(user_id: int, admin: dict = Depends(require_admin)):
     if user_id == 1:
         raise HTTPException(status_code=400, detail="Cannot delete default admin")
     conn = db.get_connection()
@@ -71,7 +71,7 @@ def delete_user(user_id: int, admin: UserResponse = Depends(require_admin)):
     return {"message": "User deleted"}
 
 @router.get("/stats")
-def get_statistics(admin: UserResponse = Depends(require_admin)):
+def get_statistics(admin: dict = Depends(require_admin)):
     conn = db.get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) as total FROM users")

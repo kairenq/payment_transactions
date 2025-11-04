@@ -3,13 +3,13 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from models import StatsResponse, UserResponse
 from database import db
-from routes.auth import get_current_user
+from security import get_current_user_from_token
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
 @router.get("/stats", response_model=StatsResponse)
 def get_user_statistics(
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -17,21 +17,21 @@ def get_user_statistics(
     # Общее количество транзакций
     cursor.execute(
         "SELECT COUNT(*) as total FROM transactions WHERE user_id = ?",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     total_transactions = cursor.fetchone()['total']
 
     # Общий доход
     cursor.execute(
         "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'income' AND status = 'completed'",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     total_income = cursor.fetchone()['total']
 
     # Общие расходы
     cursor.execute(
         "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'expense' AND status = 'completed'",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     total_expense = cursor.fetchone()['total']
 
@@ -41,25 +41,25 @@ def get_user_statistics(
     # Количество по статусам
     cursor.execute(
         "SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND status = 'pending'",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     pending_count = cursor.fetchone()['count']
 
     cursor.execute(
         "SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND status = 'completed'",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     completed_count = cursor.fetchone()['count']
 
     cursor.execute(
         "SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND status = 'failed'",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     failed_count = cursor.fetchone()['count']
 
     cursor.execute(
         "SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND status = 'cancelled'",
-        (current_user.id,)
+        (current_user.get("id"),)
     )
     cancelled_count = cursor.fetchone()['count']
 
@@ -79,7 +79,7 @@ def get_user_statistics(
 @router.get("/chart/monthly")
 def get_monthly_chart_data(
     months: int = Query(6, ge=1, le=24),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -94,7 +94,7 @@ def get_monthly_chart_data(
             AND transaction_date >= date('now', '-{months} months')
         GROUP BY month, type
         ORDER BY month
-    """, (current_user.id,))
+    """, (current_user.get("id"),))
 
     results = cursor.fetchall()
     conn.close()
@@ -112,7 +112,7 @@ def get_monthly_chart_data(
 @router.get("/chart/category")
 def get_category_chart_data(
     days: int = Query(30, ge=1, le=365),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -129,7 +129,7 @@ def get_category_chart_data(
             AND t.transaction_date >= date('now', '-{days} days')
         GROUP BY pc.name, pc.color
         ORDER BY total DESC
-    """, (current_user.id,))
+    """, (current_user.get("id"),))
 
     results = [dict(row) for row in cursor.fetchall()]
     conn.close()
@@ -141,7 +141,7 @@ def get_category_chart_data(
 
 @router.get("/chart/status")
 def get_status_chart_data(
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -153,7 +153,7 @@ def get_status_chart_data(
         FROM transactions
         WHERE user_id = ?
         GROUP BY status
-    """, (current_user.id,))
+    """, (current_user.get("id"),))
 
     results = [dict(row) for row in cursor.fetchall()]
     conn.close()
@@ -163,7 +163,7 @@ def get_status_chart_data(
 @router.get("/chart/daily")
 def get_daily_chart_data(
     days: int = Query(7, ge=1, le=90),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -178,7 +178,7 @@ def get_daily_chart_data(
             AND transaction_date >= date('now', '-{days} days')
         GROUP BY date, type
         ORDER BY date
-    """, (current_user.id,))
+    """, (current_user.get("id"),))
 
     results = cursor.fetchall()
     conn.close()
@@ -197,7 +197,7 @@ def get_daily_chart_data(
 def get_top_categories(
     limit: int = Query(5, ge=1, le=20),
     type: Optional[str] = Query(None),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -213,7 +213,7 @@ def get_top_categories(
         LEFT JOIN payment_categories pc ON t.category_id = pc.id
         WHERE t.user_id = ? AND t.status = 'completed'
     """
-    params = [current_user.id]
+    params = [current_user.get("id")]
 
     if type:
         query += " AND t.type = ?"
@@ -238,7 +238,7 @@ def get_top_categories(
 @router.get("/recent-activity")
 def get_recent_activity(
     limit: int = Query(10, ge=1, le=100),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -254,7 +254,7 @@ def get_recent_activity(
         WHERE t.user_id = ?
         ORDER BY t.created_at DESC
         LIMIT ?
-    """, (current_user.id, limit))
+    """, (current_user.get("id"), limit))
 
     results = [dict(row) for row in cursor.fetchall()]
     conn.close()
