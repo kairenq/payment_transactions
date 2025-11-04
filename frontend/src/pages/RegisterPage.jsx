@@ -26,7 +26,10 @@ const RegisterPage = () => {
     e.preventDefault();
     const success = await register(userData);
     if (success) {
-      navigate('/dashboard');
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
     }
   };
 
@@ -37,7 +40,7 @@ const RegisterPage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backgroundColor: '#0a1929',
       }}
     >
       <Container maxWidth="sm">

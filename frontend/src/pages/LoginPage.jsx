@@ -22,7 +22,10 @@ const LoginPage = () => {
     e.preventDefault();
     const success = await login(credentials);
     if (success) {
-      navigate('/dashboard');
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
     }
   };
 
@@ -33,7 +36,7 @@ const LoginPage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backgroundColor: '#0a1929',
       }}
     >
       <Container maxWidth="sm">

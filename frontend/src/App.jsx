@@ -16,18 +16,40 @@ import Layout from './components/layout/Layout';
 
 const theme = createTheme({
   palette: {
-    mode: 'light',
+    mode: 'dark',
     primary: {
-      main: '#1976d2',
+      main: '#2196f3',
+      light: '#64b5f6',
+      dark: '#1976d2',
     },
     secondary: {
-      main: '#9c27b0',
+      main: '#26a69a',
+      light: '#4db6ac',
+      dark: '#00897b',
     },
     success: {
-      main: '#2e7d32',
+      main: '#66bb6a',
+      light: '#81c784',
+      dark: '#4caf50',
     },
     error: {
-      main: '#d32f2f',
+      main: '#ef5350',
+      light: '#e57373',
+      dark: '#f44336',
+    },
+    warning: {
+      main: '#ffa726',
+    },
+    info: {
+      main: '#29b6f6',
+    },
+    background: {
+      default: '#0a1929',
+      paper: '#132f4c',
+    },
+    text: {
+      primary: '#e3f2fd',
+      secondary: '#b0bec5',
     },
   },
   typography: {
@@ -40,6 +62,22 @@ const theme = createTheme({
       'Arial',
       'sans-serif',
     ].join(','),
+  },
+  components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#001e3c',
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#001e3c',
+        },
+      },
+    },
   },
 });
 
