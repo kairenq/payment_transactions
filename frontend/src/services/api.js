@@ -9,8 +9,10 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
+    console.log('🔑 Sending request with token:', token ? 'Yes' : 'No');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('📤 Authorization header:', config.headers.Authorization);
     }
     return config;
   },
@@ -19,14 +21,20 @@ api.interceptors.request.use(
   }
 );
 
-// Handle 401 errors (expired/invalid token)
+// Handle 401/403 errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Clear token on 401 but DON'T auto-redirect
-      // Let the component handle the redirect
+    console.error('❌ API Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      hasToken: !!localStorage.getItem('access_token')
+    });
+
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Clear token on auth errors
       localStorage.removeItem('access_token');
+      console.log('🗑️ Token cleared due to auth error');
     }
     return Promise.reject(error);
   }
