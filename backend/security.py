@@ -32,11 +32,19 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create a JWT access token"""
     to_encode = data.copy()
+
+    # Convert 'sub' to string (JWT spec requires string)
+    if 'sub' in to_encode:
+        to_encode['sub'] = str(to_encode['sub'])
+
+    # Calculate expiration time
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+
+    # Convert datetime to timestamp (seconds since epoch)
+    to_encode.update({"exp": int(expire.timestamp())})
 
     print(f"🔐 Creating token with:")
     print(f"   Data: {to_encode}")
@@ -91,11 +99,19 @@ def get_current_user_from_token(credentials: HTTPAuthorizationCredentials = Depe
             print("❌ Token decode returned None")
             raise credentials_exception
 
-        user_id: int = payload.get("sub")
-        print(f"👤 User ID from token: {user_id}")
+        user_id_str = payload.get("sub")
+        print(f"👤 User ID from token (string): {user_id_str}")
 
-        if user_id is None:
+        if user_id_str is None:
             print("❌ No 'sub' in payload")
+            raise credentials_exception
+
+        # Convert string user_id back to integer for database lookup
+        try:
+            user_id = int(user_id_str)
+            print(f"👤 User ID converted to int: {user_id}")
+        except (ValueError, TypeError) as e:
+            print(f"❌ Failed to convert user_id to int: {e}")
             raise credentials_exception
 
         # Get user from database
