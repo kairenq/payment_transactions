@@ -50,30 +50,46 @@ def decode_access_token(token: str) -> Optional[dict]:
 def get_current_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Dependency to get current user from JWT token"""
     from database import db
+    import traceback
 
     token = credentials.credentials
+    print(f"🔍 Validating token: {token[:50]}...")
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    payload = decode_access_token(token)
-    if payload is None:
+    try:
+        payload = decode_access_token(token)
+        print(f"📦 Token payload: {payload}")
+
+        if payload is None:
+            print("❌ Token decode returned None")
+            raise credentials_exception
+
+        user_id: int = payload.get("sub")
+        print(f"👤 User ID from token: {user_id}")
+
+        if user_id is None:
+            print("❌ No 'sub' in payload")
+            raise credentials_exception
+
+        # Get user from database
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ? AND is_active = 1", (user_id,))
+        user = cursor.fetchone()
+        conn.close()
+
+        if user is None:
+            print(f"❌ No user found with id={user_id}")
+            raise credentials_exception
+
+        print(f"✅ User authenticated: {user['username']}")
+        return dict(user)
+    except Exception as e:
+        print(f"💥 Exception in token validation: {e}")
+        print(traceback.format_exc())
         raise credentials_exception
-
-    user_id: int = payload.get("sub")
-    if user_id is None:
-        raise credentials_exception
-
-    # Get user from database
-    conn = db.get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ? AND is_active = 1", (user_id,))
-    user = cursor.fetchone()
-    conn.close()
-
-    if user is None:
-        raise credentials_exception
-
-    return dict(user)
