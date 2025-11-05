@@ -59,8 +59,22 @@ export const adminAPI = {
   getStats: () => api.get('/admin/stats'),
 };
 
+// Helper: Remove empty/null/undefined parameters
+const cleanParams = (params) => {
+  if (!params) return {};
+  const cleaned = {};
+  Object.keys(params).forEach((key) => {
+    const value = params[key];
+    // Include only non-empty values (skip '', null, undefined)
+    if (value !== '' && value !== null && value !== undefined) {
+      cleaned[key] = value;
+    }
+  });
+  return cleaned;
+};
+
 export const transactionsAPI = {
-  getAll: (params) => api.get('/transactions/', { params }),
+  getAll: (params) => api.get('/transactions/', { params: cleanParams(params) }),
   getById: (id) => api.get(`/transactions/${id}`),
   create: (data) => api.post('/transactions/', data),
   update: (id, data) => api.put(`/transactions/${id}`, data),
