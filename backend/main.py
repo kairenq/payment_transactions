@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import db
 from routes import auth, admin, transactions, analytics
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,11 +14,19 @@ db.init_database()
 cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
+# Allow all Netlify deploy previews and production domains
+# This regex will match:
+# - https://strong-sorbet-9b3219.netlify.app (production)
+# - https://deploy-preview-*--strong-sorbet-9b3219.netlify.app (previews)
+# - http://localhost:5173 (development)
+cors_origin_regex = r"https://.*\.netlify\.app|http://localhost:\d+"
+
 print("=" * 80)
 print("🔧 CORS Configuration:")
 print(f"📝 Raw CORS_ORIGINS env: {repr(cors_origins_str)}")
-print(f"✅ Parsed origins: {cors_origins}")
-print(f"🌐 Number of origins: {len(cors_origins)}")
+print(f"✅ Allowed origins: {cors_origins}")
+print(f"🔓 Regex pattern: {cors_origin_regex}")
+print(f"🌐 This allows all *.netlify.app subdomains and localhost")
 print("=" * 80)
 
 app = FastAPI(
@@ -28,7 +37,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
