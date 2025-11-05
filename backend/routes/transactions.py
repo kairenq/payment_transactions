@@ -106,9 +106,9 @@ def delete_category(
 def get_transactions(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    type: Optional[str] = None,
-    status: Optional[str] = None,
-    category_id: Optional[int] = None,
+    type: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    category_id: Optional[int] = Query(None),
     current_user: dict = Depends(get_current_user_from_token)
 ):
     conn = db.get_connection()
@@ -126,10 +126,11 @@ def get_transactions(
     """
     params = [current_user["id"]]
 
-    if type:
+    # Игнорируем пустые строки
+    if type and type.strip():
         query += " AND t.type = ?"
         params.append(type)
-    if status:
+    if status and status.strip():
         query += " AND t.status = ?"
         params.append(status)
     if category_id:
