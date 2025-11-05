@@ -84,6 +84,7 @@ const RegisterPage = () => {
                 value={userData.email}
                 onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                 required
+                helperText="Например: user@example.com"
               />
               <TextField
                 fullWidth
