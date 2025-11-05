@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from database import db
 from routes import auth, admin, transactions, analytics
 import os
@@ -34,6 +36,25 @@ app = FastAPI(
     version="1.0.0",
     description="Информационная система управления платежными транзакциями"
 )
+
+# Handle validation errors with detailed logging
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print("=" * 80)
+    print("❌ VALIDATION ERROR (422):")
+    print(f"   URL: {request.url}")
+    print(f"   Method: {request.method}")
+    try:
+        body = await request.json()
+        print(f"   Body: {body}")
+    except:
+        print("   Body: (unable to parse)")
+    print(f"   Errors: {exc.errors()}")
+    print("=" * 80)
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
+    )
 
 app.add_middleware(
     CORSMiddleware,
