@@ -68,14 +68,22 @@ const AdminPage = () => {
 
   const loadData = async () => {
     try {
-      const [usersRes, statsRes, transactionsRes] = await Promise.all([
+      const [usersRes, statsRes] = await Promise.all([
         adminAPI.getAllUsers(),
         adminAPI.getStats(),
-        adminAPI.getPendingTransactions(),
       ]);
       setUsers(usersRes.data);
       setStats(statsRes.data);
-      setPendingTransactions(transactionsRes.data);
+
+      // Try to load pending transactions, but don't fail if endpoint doesn't exist yet
+      try {
+        const transactionsRes = await adminAPI.getPendingTransactions();
+        setPendingTransactions(transactionsRes.data);
+      } catch (transError) {
+        // Endpoint might not be deployed yet, just set empty array
+        console.warn('Pending transactions endpoint not available yet');
+        setPendingTransactions([]);
+      }
     } catch (error) {
       toast.error('Ошибка загрузки данных');
     } finally {
