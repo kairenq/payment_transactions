@@ -283,21 +283,16 @@ npm run build
 
 ## 🚀 Production Deployment
 
-### Быстрый деплой на Render + Netlify
+### Быстрый деплой на Render + Cloudflare Pages
 
-Проект готов к деплою на **Render** (backend) и **Netlify** (frontend) из коробки!
-
-📖 **[Полный гайд по деплою](./DEPLOYMENT_GUIDE.md)** - Подробное пошаговое руководство
-
-⚡ **[Быстрый деплой за 5 минут](./QUICK_DEPLOY.md)** - Краткая инструкция
+Проект готов к деплою на **Render** (backend) и **Cloudflare Pages** (frontend) из коробки!
 
 #### Что уже настроено:
 
 ✅ `render.yaml` - Конфигурация для Render
 ✅ `backend/start.sh` - Скрипт запуска backend
-✅ `frontend/netlify.toml` - Конфигурация для Netlify
 ✅ Environment variables - Примеры в `.env.example`
-✅ CORS - Динамическая настройка для production
+✅ CORS - Автоматически принимает все `*.pages.dev` домены
 ✅ API URL - Конфигурируется через env переменные
 
 #### Деплой за 3 шага:
@@ -306,18 +301,32 @@ npm run build
    - Зарегистрируйтесь на [render.com](https://render.com)
    - Создайте Web Service из GitHub репозитория
    - Укажите `backend` как Root Directory
+   - Render автоматически задеплоит приложение
 
-2. **Frontend на Netlify:**
-   - Зарегистрируйтесь на [netlify.com](https://netlify.com)
-   - Импортируйте проект из GitHub
-   - Укажите `frontend` как Base Directory
-   - Добавьте `VITE_API_BASE_URL` с вашим Render URL
+2. **Frontend на Cloudflare Pages:**
+   - Зайдите в [Cloudflare Dashboard](https://dash.cloudflare.com)
+   - Workers & Pages → Create → Connect to Git
+   - Выберите ваш GitHub репозиторий
+   - Build settings:
+     - Framework preset: **Vite**
+     - Build command: `npm run build`
+     - Build output directory: `dist`
+     - Root directory: `frontend`
+   - Environment variables:
+     - `VITE_API_BASE_URL` = ваш Render URL (например: `https://payment-transactions.onrender.com/api`)
+   - Save and Deploy
 
-3. **Настройте CORS:**
-   - В Render добавьте `CORS_ORIGINS` с вашим Netlify URL
-   - Готово! 🎉
+3. **CORS уже настроен:**
+   - Backend автоматически принимает все домены `*.pages.dev`
+   - Никаких дополнительных настроек не требуется! 🎉
 
-См. [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) для подробных инструкций
+#### Преимущества Cloudflare Pages:
+
+- 🚀 Мгновенный деплой (быстрее чем Netlify)
+- 🌍 Глобальная CDN сеть Cloudflare
+- 🔒 Бесплатный SSL
+- ⚡ Unlimited bandwidth
+- 🌿 Автоматический деплой preview веток
 
 ## 📄 Лицензия
 

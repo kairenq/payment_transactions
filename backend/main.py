@@ -16,19 +16,20 @@ db.init_database()
 cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
-# Allow all Netlify deploy previews and production domains
+# Allow all Cloudflare Pages deploy previews and production domains
 # This regex will match:
-# - https://strong-sorbet-9b3219.netlify.app (production)
-# - https://deploy-preview-*--strong-sorbet-9b3219.netlify.app (previews)
+# - https://payment-transactions.pages.dev (production)
+# - https://*.payment-transactions.pages.dev (branch previews)
+# - https://*.pages.dev (any Cloudflare Pages project)
 # - http://localhost:5173 (development)
-cors_origin_regex = r"https://.*\.netlify\.app|http://localhost:\d+"
+cors_origin_regex = r"https://.*\.pages\.dev|http://localhost:\d+"
 
 print("=" * 80)
 print("🔧 CORS Configuration:")
 print(f"📝 Raw CORS_ORIGINS env: {repr(cors_origins_str)}")
 print(f"✅ Allowed origins: {cors_origins}")
 print(f"🔓 Regex pattern: {cors_origin_regex}")
-print(f"🌐 This allows all *.netlify.app subdomains and localhost")
+print(f"🌐 This allows all *.pages.dev (Cloudflare Pages) and localhost")
 print("=" * 80)
 
 app = FastAPI(
