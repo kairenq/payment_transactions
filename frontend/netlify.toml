@@ -1,0 +1,20 @@
+[build]
+  # Build command
+  command = "npm run build"
+
+  # Directory with build output
+  publish = "dist"
+
+  # Base directory for build
+  base = "frontend"
+
+# Redirect all requests to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables (set these in Netlify dashboard)
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"

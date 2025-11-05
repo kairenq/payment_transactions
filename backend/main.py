@@ -2,14 +2,26 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import db
 from routes import auth, admin, transactions, analytics
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 db.init_database()
 
-app = FastAPI(title="Payment Transactions System API", version="1.0.0", description="Информационная система управления платежными транзакциями")
+# Get CORS origins from environment variable
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
+
+app = FastAPI(
+    title="Payment Transactions System API",
+    version="1.0.0",
+    description="Информационная система управления платежными транзакциями"
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
