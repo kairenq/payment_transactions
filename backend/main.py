@@ -37,23 +37,52 @@ app = FastAPI(
     description="Информационная система управления платежными транзакциями"
 )
 
+# Middleware to log all requests
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Read and cache body for logging
+    body = None
+    if request.method in ["POST", "PUT", "PATCH"]:
+        try:
+            body_bytes = await request.body()
+            body = body_bytes.decode()
+            # Re-create request with cached body
+            async def receive():
+                return {"type": "http.request", "body": body_bytes}
+            request._receive = receive
+        except:
+            pass
+
+    # Log request
+    if "/auth/register" in str(request.url):
+        print("=" * 80)
+        print(f"📥 INCOMING REQUEST TO /auth/register")
+        print(f"   Method: {request.method}")
+        print(f"   Headers: {dict(request.headers)}")
+        print(f"   Body: {body}")
+        print("=" * 80)
+
+    # Process request
+    response = await call_next(request)
+
+    # Log response for /auth/register
+    if "/auth/register" in str(request.url):
+        print(f"📤 RESPONSE: Status {response.status_code}")
+
+    return response
+
 # Handle validation errors with detailed logging
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
     print("=" * 80)
     print("❌ VALIDATION ERROR (422):")
     print(f"   URL: {request.url}")
-    print(f"   Method: {request.method}")
-    try:
-        body = await request.json()
-        print(f"   Body: {body}")
-    except:
-        print("   Body: (unable to parse)")
-    print(f"   Errors: {exc.errors()}")
+    print(f"   Errors: {errors}")
     print("=" * 80)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": exc.errors()},
+        content={"detail": errors},
     )
 
 app.add_middleware(
