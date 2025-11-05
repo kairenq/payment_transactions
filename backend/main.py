@@ -13,6 +13,13 @@ db.init_database()
 cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
+print("=" * 80)
+print("🔧 CORS Configuration:")
+print(f"📝 Raw CORS_ORIGINS env: {repr(cors_origins_str)}")
+print(f"✅ Parsed origins: {cors_origins}")
+print(f"🌐 Number of origins: {len(cors_origins)}")
+print("=" * 80)
+
 app = FastAPI(
     title="Payment Transactions System API",
     version="1.0.0",
