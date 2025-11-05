@@ -63,7 +63,28 @@ export const AuthProvider = ({ children }) => {
       toast.success('Регистрация успешна!');
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Ошибка регистрации');
+      // Handle validation errors (422)
+      if (error.response?.status === 422 && error.response?.data?.detail) {
+        const errors = error.response.data.detail;
+        if (Array.isArray(errors) && errors.length > 0) {
+          // Show first validation error with field name
+          const firstError = errors[0];
+          const field = firstError.loc?.[1] || 'поле';
+          const fieldNames = {
+            'username': 'Имя пользователя',
+            'email': 'Email',
+            'password': 'Пароль'
+          };
+          const fieldName = fieldNames[field] || field;
+          const message = firstError.msg || 'Некорректное значение';
+          toast.error(`${fieldName}: ${message}`);
+        } else {
+          toast.error('Ошибка валидации данных');
+        }
+      } else {
+        // Handle other errors
+        toast.error(error.response?.data?.detail || 'Ошибка регистрации');
+      }
       return false;
     }
   };

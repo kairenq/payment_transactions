@@ -15,6 +15,13 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 @router.post("/register")
 def register(user: UserRegister):
     """Register a new user"""
+    print("=" * 80)
+    print("📝 Registration attempt:")
+    print(f"   Username: {user.username} (len: {len(user.username)})")
+    print(f"   Email: {user.email}")
+    print(f"   Password length: {len(user.password)}")
+    print("=" * 80)
+
     conn = db.get_connection()
     cursor = conn.cursor()
     try:
@@ -33,12 +40,15 @@ def register(user: UserRegister):
         # Create access token
         access_token = create_access_token(data={"sub": new_user['id']})
 
+        print(f"✅ User registered successfully: {user.username}")
+
         return {
             "access_token": access_token,
             "token_type": "bearer",
             "user": new_user
         }
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
+        print(f"❌ Registration failed: {e}")
         raise HTTPException(status_code=400, detail="Username or email already exists")
     finally:
         conn.close()
