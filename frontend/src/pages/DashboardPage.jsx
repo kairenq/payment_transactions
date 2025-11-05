@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  alpha,
 } from '@mui/material';
 import {
   AccountBalance,
@@ -20,7 +19,6 @@ import { motion } from 'framer-motion';
 import { analyticsAPI, transactionsAPI } from '../services/api';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-toastify';
-import { glassCard, gradients, fadeIn } from '../styles/theme';
 
 const DashboardPage = () => {
   const [stats, setStats] = useState(null);
@@ -67,24 +65,12 @@ const DashboardPage = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
   const StatCard = ({ title, value, icon, color, subtitle }) => (
-    <motion.div {...fadeIn}>
-      <Card
-        sx={{
-          height: '100%',
-          ...glassCard,
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '4px',
-            background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.5)})`,
-          }
-        }}
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card sx={{ height: '100%', background: `linear-gradient(135deg, ${color}22 0%, ${color}11 100%)` }}>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box>
@@ -100,14 +86,7 @@ const DashboardPage = () => {
                 </Typography>
               )}
             </Box>
-            <Box
-              sx={{
-                color: color,
-                fontSize: 50,
-                opacity: 0.8,
-                filter: `drop-shadow(0 0 10px ${alpha(color, 0.3)})`
-              }}
-            >
+            <Box sx={{ color: color, fontSize: 50 }}>
               {icon}
             </Box>
           </Box>
@@ -268,14 +247,14 @@ const DashboardPage = () => {
                         alignItems: 'center',
                         p: 2,
                         mb: 1,
-                        bgcolor: alpha('#1e293b', 0.4),
+                        bgcolor: 'rgba(30, 41, 59, 0.4)',
                         borderRadius: 2,
-                        border: `1px solid ${alpha('#334155', 0.2)}`,
+                        border: '1px solid rgba(51, 65, 85, 0.2)',
                         backdropFilter: 'blur(10px)',
                         transition: 'all 0.3s ease',
                         '&:hover': {
-                          bgcolor: alpha('#1e293b', 0.6),
-                          borderColor: alpha('#3b82f6', 0.3),
+                          bgcolor: 'rgba(30, 41, 59, 0.6)',
+                          borderColor: 'rgba(59, 130, 246, 0.3)',
                           transform: 'translateX(8px)',
                         },
                       }}
@@ -286,14 +265,13 @@ const DashboardPage = () => {
                             width: 48,
                             height: 48,
                             borderRadius: '12px',
-                            background: transaction.type === 'income' ? gradients.success : gradients.error,
+                            bgcolor: transaction.type === 'income' ? '#2e7d32' : '#d32f2f',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
                             fontWeight: 'bold',
                             fontSize: '1.5rem',
-                            boxShadow: `0 4px 12px ${alpha(transaction.type === 'income' ? '#10b981' : '#ef4444', 0.3)}`,
                           }}
                         >
                           {transaction.type === 'income' ? '↑' : '↓'}

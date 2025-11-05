@@ -189,7 +189,15 @@ const AdminPage = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.100' }}>
+              <TableRow
+                sx={{
+                  bgcolor: 'rgba(30, 41, 59, 0.6)',
+                  '& .MuiTableCell-root': {
+                    fontWeight: 600,
+                    borderBottom: '2px solid rgba(59, 130, 246, 0.2)',
+                  }
+                }}
+              >
                 <TableCell>ID</TableCell>
                 <TableCell>Имя пользователя</TableCell>
                 <TableCell>Email</TableCell>

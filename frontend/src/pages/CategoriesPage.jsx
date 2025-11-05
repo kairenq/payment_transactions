@@ -193,29 +193,6 @@ const CategoriesPage = () => {
                   <Typography variant="body2" color="text.secondary">
                     {category.description || 'Без описания'}
                   </Typography>
-                  <Box
-                    sx={{
-                      mt: 2,
-                      p: 1,
-                      bgcolor: 'grey.100',
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: '50%',
-                        bgcolor: category.color,
-                      }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      {category.color}
-                    </Typography>
-                  </Box>
                 </CardContent>
               </Card>
             </motion.div>
