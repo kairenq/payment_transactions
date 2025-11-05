@@ -57,6 +57,11 @@ export const adminAPI = {
   updateUser: (userId, userData) => api.put(`/admin/users/${userId}`, userData),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
   getStats: () => api.get('/admin/stats'),
+
+  // Transaction management
+  getPendingTransactions: () => api.get('/admin/transactions/pending'),
+  updateTransactionStatus: (transactionId, status) =>
+    api.put(`/admin/transactions/${transactionId}/status`, { status }),
 };
 
 // Helper: Remove empty/null/undefined parameters

@@ -27,8 +27,22 @@ import {
   Switch,
   FormControlLabel,
   CircularProgress,
+  Tabs,
+  Tab,
+  Tooltip,
 } from '@mui/material';
-import { Edit, Delete, People, PersonAdd, AdminPanelSettings, Schedule } from '@mui/icons-material';
+import {
+  Edit,
+  Delete,
+  People,
+  PersonAdd,
+  AdminPanelSettings,
+  Schedule,
+  CheckCircle,
+  Cancel,
+  Payment,
+  HourglassEmpty,
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { adminAPI } from '../services/api';
 import { toast } from 'react-toastify';
@@ -36,7 +50,9 @@ import { toast } from 'react-toastify';
 const AdminPage = () => {
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
+  const [pendingTransactions, setPendingTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tabValue, setTabValue] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
@@ -52,12 +68,14 @@ const AdminPage = () => {
 
   const loadData = async () => {
     try {
-      const [usersRes, statsRes] = await Promise.all([
+      const [usersRes, statsRes, transactionsRes] = await Promise.all([
         adminAPI.getAllUsers(),
         adminAPI.getStats(),
+        adminAPI.getPendingTransactions(),
       ]);
       setUsers(usersRes.data);
       setStats(statsRes.data);
+      setPendingTransactions(transactionsRes.data);
     } catch (error) {
       toast.error('Ошибка загрузки данных');
     } finally {
@@ -100,6 +118,27 @@ const AdminPage = () => {
       loadData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Ошибка удаления');
+    }
+  };
+
+  const handleApproveTransaction = async (id) => {
+    try {
+      await adminAPI.updateTransactionStatus(id, 'completed');
+      toast.success('Транзакция одобрена');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Ошибка одобрения');
+    }
+  };
+
+  const handleRejectTransaction = async (id) => {
+    if (!window.confirm('Отклонить транзакцию?')) return;
+    try {
+      await adminAPI.updateTransactionStatus(id, 'failed');
+      toast.success('Транзакция отклонена');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Ошибка отклонения');
     }
   };
 
@@ -146,7 +185,20 @@ const AdminPage = () => {
         Управление пользователями и системой
       </Typography>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+          <Tab label="Пользователи" icon={<People />} iconPosition="start" />
+          <Tab
+            label={`Транзакции (${pendingTransactions.length})`}
+            icon={<Payment />}
+            iconPosition="start"
+          />
+        </Tabs>
+      </Box>
+
+      {tabValue === 0 && (
+        <>
+          <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Всего пользователей"
@@ -255,6 +307,110 @@ const AdminPage = () => {
           </Table>
         </TableContainer>
       </motion.div>
+        </>
+      )}
+
+      {tabValue === 1 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {pendingTransactions.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <HourglassEmpty sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">
+                Нет транзакций, ожидающих подтверждения
+              </Typography>
+            </Paper>
+          ) : (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow
+                    sx={{
+                      bgcolor: 'rgba(30, 41, 59, 0.6)',
+                      '& .MuiTableCell-root': {
+                        fontWeight: 600,
+                        borderBottom: '2px solid rgba(59, 130, 246, 0.2)',
+                      },
+                    }}
+                  >
+                    <TableCell>ID</TableCell>
+                    <TableCell>Пользователь</TableCell>
+                    <TableCell>Тип</TableCell>
+                    <TableCell>Сумма</TableCell>
+                    <TableCell>Категория</TableCell>
+                    <TableCell>Описание</TableCell>
+                    <TableCell>Дата</TableCell>
+                    <TableCell align="center">Действия</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pendingTransactions.map((transaction) => (
+                    <TableRow key={transaction.id} hover>
+                      <TableCell>{transaction.id}</TableCell>
+                      <TableCell>
+                        <Typography fontWeight="bold">{transaction.user_username}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={transaction.type === 'income' ? 'Доход' : 'Расход'}
+                          size="small"
+                          color={transaction.type === 'income' ? 'success' : 'error'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography fontWeight="bold">
+                          {transaction.amount} {transaction.currency}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={transaction.category_name || 'Без категории'}
+                          size="small"
+                          sx={{
+                            bgcolor: transaction.category_color || '#757575',
+                            color: 'white',
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                          {transaction.description || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(transaction.transaction_date).toLocaleDateString('ru-RU')}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Одобрить">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() => handleApproveTransaction(transaction.id)}
+                          >
+                            <CheckCircle />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Отклонить">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRejectTransaction(transaction.id)}
+                          >
+                            <Cancel />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </motion.div>
+      )}
 
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Редактировать пользователя</DialogTitle>

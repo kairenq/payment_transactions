@@ -1,11 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
+from pydantic import BaseModel
 import sqlite3
-from models import UserResponse, UserUpdate
+from models import UserResponse, UserUpdate, TransactionWithCategory
 from database import db
 from security import get_current_user_from_token
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
+
+class TransactionStatusUpdate(BaseModel):
+    status: str  # 'completed' or 'failed'
 
 def require_admin(current_user: dict = Depends(get_current_user_from_token)):
     if current_user.get('role') != "admin":
@@ -89,3 +93,87 @@ def get_statistics(admin: dict = Depends(require_admin)):
         "admin_count": admin_count,
         "recent_registrations": recent_registrations
     }
+
+# ==================== УПРАВЛЕНИЕ ТРАНЗАКЦИЯМИ ====================
+
+@router.get("/transactions/pending", response_model=List[TransactionWithCategory])
+def get_pending_transactions(admin: dict = Depends(require_admin)):
+    """Get all pending transactions for admin approval"""
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT
+            t.*,
+            pc.name as category_name,
+            pc.color as category_color,
+            pc.icon as category_icon,
+            u.username as user_username
+        FROM transactions t
+        LEFT JOIN payment_categories pc ON t.category_id = pc.id
+        LEFT JOIN users u ON t.user_id = u.id
+        WHERE t.status = 'pending'
+        ORDER BY t.created_at DESC
+    """)
+    transactions = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return transactions
+
+@router.put("/transactions/{transaction_id}/status")
+def update_transaction_status(
+    transaction_id: int,
+    status_update: TransactionStatusUpdate,
+    admin: dict = Depends(require_admin)
+):
+    """Update transaction status (approve/reject)"""
+    if status_update.status not in ['completed', 'failed']:
+        raise HTTPException(status_code=400, detail="Status must be 'completed' or 'failed'")
+
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    # Check if transaction exists
+    cursor.execute("SELECT * FROM transactions WHERE id = ?", (transaction_id,))
+    transaction = cursor.fetchone()
+    if not transaction:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    old_status = transaction['status']
+
+    # Update transaction status
+    cursor.execute(
+        "UPDATE transactions SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (status_update.status, transaction_id)
+    )
+    conn.commit()
+
+    # Log the change in history
+    action = 'approved' if status_update.status == 'completed' else 'rejected'
+    cursor.execute("""
+        INSERT INTO transaction_history (transaction_id, user_id, action, old_status, new_status, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        transaction_id,
+        admin['id'],
+        action,
+        old_status,
+        status_update.status,
+        f'Transaction {action} by admin'
+    ))
+    conn.commit()
+
+    # Get updated transaction
+    cursor.execute("""
+        SELECT
+            t.*,
+            pc.name as category_name,
+            pc.color as category_color,
+            pc.icon as category_icon
+        FROM transactions t
+        LEFT JOIN payment_categories pc ON t.category_id = pc.id
+        WHERE t.id = ?
+    """, (transaction_id,))
+    updated_transaction = dict(cursor.fetchone())
+    conn.close()
+
+    return updated_transaction
