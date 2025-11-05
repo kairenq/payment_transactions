@@ -1,0 +1,116 @@
+@startuml Payment Transactions System - Use Case Diagram
+
+title Payment Transactions System - Диаграмма вариантов использования
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Пользователь" as User
+actor "Администратор" as Admin
+
+rectangle "Payment Transactions System" {
+
+  package "Аутентификация" {
+    usecase "Регистрация" as UC1
+    usecase "Вход в систему" as UC2
+    usecase "Выход из системы" as UC3
+  }
+
+  package "Управление транзакциями" {
+    usecase "Просмотр транзакций" as UC4
+    usecase "Создание транзакции" as UC5
+    usecase "Редактирование транзакции" as UC6
+    usecase "Удаление транзакции" as UC7
+    usecase "Фильтрация транзакций" as UC8
+    usecase "Просмотр истории транзакции" as UC9
+  }
+
+  package "Аналитика и отчеты" {
+    usecase "Просмотр дашборда" as UC10
+    usecase "Просмотр графиков доходов/расходов" as UC11
+    usecase "Просмотр аналитики по категориям" as UC12
+    usecase "Просмотр месячной статистики" as UC13
+    usecase "Просмотр топ категорий" as UC14
+    usecase "Просмотр последней активности" as UC15
+  }
+
+  package "Управление категориями" {
+    usecase "Просмотр категорий" as UC16
+    usecase "Создание категории" as UC17
+    usecase "Редактирование категории" as UC18
+    usecase "Удаление категории" as UC19
+  }
+
+  package "Администрирование" {
+    usecase "Просмотр всех пользователей" as UC20
+    usecase "Редактирование пользователя" as UC21
+    usecase "Удаление пользователя" as UC22
+    usecase "Просмотр статистики системы" as UC23
+    usecase "Просмотр ожидающих транзакций" as UC24
+    usecase "Одобрение транзакции" as UC25
+    usecase "Отклонение транзакции" as UC26
+  }
+
+  package "Помощь" {
+    usecase "Просмотр руководства" as UC27
+  }
+}
+
+' Связи для обычного пользователя
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+User --> UC15
+User --> UC16
+User --> UC17
+User --> UC18
+User --> UC19
+User --> UC27
+
+' Связи для администратора (наследует все от пользователя + дополнительные)
+Admin --|> User
+Admin --> UC20
+Admin --> UC21
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+Admin --> UC26
+
+' Отношения include
+UC4 .> UC8 : <<include>>
+UC10 .> UC11 : <<include>>
+UC10 .> UC15 : <<include>>
+
+' Отношения extend
+UC25 .> UC24 : <<extend>>
+UC26 .> UC24 : <<extend>>
+
+note right of Admin
+  Администратор имеет все права
+  обычного пользователя плюс
+  административные функции
+end note
+
+note bottom of UC25
+  Транзакция переходит
+  в статус "completed"
+end note
+
+note bottom of UC26
+  Транзакция переходит
+  в статус "failed"
+end note
+
+@enduml
