@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam backgroundColor white
+skinparam handwritten false
+
+left to right direction
+
+actor "Пользователь" as User
+actor "Администратор" as Admin
+
+rectangle "Payment Transactions System" {
+  
+  (Регистрация) as reg
+  (Вход) as login
+  (Выход) as logout
+  
+  (Просмотр транзакций) as view_trans
+  (Создание транзакции) as create_trans
+  (Редактирование транзакции) as edit_trans
+  (Удаление транзакции) as delete_trans
+  (Фильтрация) as filter
+  
+  (Просмотр дашборда) as dashboard
+  (Аналитика) as analytics
+  (Графики) as charts
+  
+  (Категории) as categories
+  (Создание категории) as create_cat
+  (Редактирование категории) as edit_cat
+  
+  (Управление пользователями) as manage_users
+  (Одобрение транзакций) as approve
+  (Отклонение транзакций) as reject
+  (Статистика системы) as stats
+  
+  (Помощь) as help
+}
+
+User --> reg
+User --> login
+User --> logout
+User --> view_trans
+User --> create_trans
+User --> edit_trans
+User --> delete_trans
+User --> dashboard
+User --> analytics
+User --> charts
+User --> categories
+User --> create_cat
+User --> edit_cat
+User --> help
+
+Admin --|> User
+Admin --> manage_users
+Admin --> approve
+Admin --> reject
+Admin --> stats
+
+view_trans ..> filter : <<include>>
+
+@enduml
