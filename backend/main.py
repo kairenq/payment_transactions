@@ -108,6 +108,12 @@ def root():
         "status": "running"
     }
 
+@app.get("/health")
+@app.head("/health")
+def health_check():
+    """Health check endpoint for uptime monitoring (e.g., UptimeRobot, Render)"""
+    return {"status": "ok"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
