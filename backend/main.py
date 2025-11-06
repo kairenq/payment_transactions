@@ -6,6 +6,7 @@ from database import db
 from routes import auth, admin, transactions, analytics
 import os
 import re
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -107,6 +108,36 @@ def root():
         "docs": "/docs",
         "status": "running"
     }
+
+@app.head("/health")
+@app.get("/health")
+def health_check():
+    """
+    Health check endpoint for monitoring services like UptimeRobot
+    Returns 200 OK if server and database are healthy
+    Supports both HEAD and GET methods
+    """
+    try:
+        # Check database connection
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        conn.close()
+
+        return {
+            "status": "ok",
+            "message": "Server is healthy",
+            "database": "connected",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": "Database connection failed",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 if __name__ == "__main__":
     import uvicorn
