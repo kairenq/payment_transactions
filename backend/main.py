@@ -1,35 +1,27 @@
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from database import db
 from routes import auth, admin, transactions, analytics
 import os
 import re
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
 db.init_database()
 
-# Get CORS origins from environment variable
-cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,https://payment-transactions.pages.dev")
+# Get CORS origins from environment variable (for local development)
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
-
-# Allow all Cloudflare Pages deploy previews and production domains
-# This regex will match:
-# - https://payment-transactions.pages.dev (production)
-# - https://*.payment-transactions.pages.dev (branch previews)
-# - https://*.pages.dev (any Cloudflare Pages project)
-# - http://localhost:5173 (development)
-cors_origin_regex = r"https://.*\.pages\.dev|http://localhost:\d+"
 
 print("=" * 80)
 print("🔧 CORS Configuration:")
 print(f"📝 Raw CORS_ORIGINS env: {repr(cors_origins_str)}")
 print(f"✅ Allowed origins: {cors_origins}")
-print(f"🔓 Regex pattern: {cors_origin_regex}")
-print(f"🌐 This allows all *.pages.dev (Cloudflare Pages) and localhost")
 print("=" * 80)
 
 app = FastAPI(
@@ -88,18 +80,19 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=cors_origin_regex,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
-app.include_router(admin.router)
-app.include_router(transactions.router)
-app.include_router(analytics.router)
+# API routes with /api prefix
+app.include_router(auth.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
+app.include_router(transactions.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
 
-@app.get("/")
+@app.get("/api")
 def root():
     return {
         "message": "Payment Transactions System API",
@@ -113,6 +106,27 @@ def root():
 def health_check():
     """Health check endpoint for uptime monitoring (e.g., UptimeRobot, Render)"""
     return {"status": "ok"}
+
+# Serve static files (frontend)
+frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    print(f"✅ Serving frontend from: {frontend_dist}")
+    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        """Serve frontend for all non-API routes (SPA fallback)"""
+        file_path = frontend_dist / full_path
+
+        # If file exists, serve it
+        if file_path.is_file():
+            return FileResponse(file_path)
+
+        # Otherwise serve index.html (SPA routing)
+        return FileResponse(frontend_dist / "index.html")
+else:
+    print(f"⚠️  Frontend dist not found at: {frontend_dist}")
+    print("   Run: cd frontend && npm install && npm run build")
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,62 +1,133 @@
-# Setup Instructions
+# Setup Instructions - Unified Deployment
 
-## 1. Cloudflare Pages Settings
+## 🎉 Frontend and Backend Combined!
 
-Go to: https://dash.cloudflare.com/ → Pages → payment-transactions → Settings → Environment variables
-
-### Add this variable:
-
-```
-VITE_API_BASE_URL = https://payment-transactions.onrender.com/api
-```
-
-**Important:** After adding the variable, go to **Deployments** tab and click **Retry deployment** on the latest build.
+Now everything is served from **one Render service**. FastAPI serves both the API and the static frontend files.
 
 ---
 
-## 2. Render Settings
+## Deployment on Render
 
-Go to: https://dashboard.render.com/ → payment-transactions (backend) → Environment
+### What Happens Automatically:
 
-### Add these variables:
+1. **Build process** (`build.sh`):
+   - Installs Python dependencies
+   - Installs Node.js dependencies
+   - Builds frontend to `frontend/dist`
+
+2. **Runtime**:
+   - FastAPI starts on port defined by `$PORT`
+   - API available at `/api/*`
+   - Frontend served from `/` (all other routes)
+   - Health check at `/health`
+
+### URLs:
+
+- **Production**: https://payment-transactions.onrender.com
+- **API docs**: https://payment-transactions.onrender.com/docs
+- **Health check**: https://payment-transactions.onrender.com/health
+
+---
+
+## Environment Variables (already set in render.yaml)
 
 ```
-FRONTEND_URL = https://payment-transactions.pages.dev
-SECRET_KEY = (generate random 32+ character string or keep default)
+SECRET_KEY = (auto-generated)
 ALGORITHM = HS256
 ACCESS_TOKEN_EXPIRE_MINUTES = 10080
+CORS_ORIGINS = http://localhost:5173
+PYTHON_VERSION = 3.11.0
+NODE_VERSION = 18.17.0
 ```
 
-**Important:** After adding variables, Render will automatically redeploy your backend.
+---
+
+## Local Development
+
+### Option 1: Separate (Recommended for development)
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --reload
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open: http://localhost:5173
+
+### Option 2: Combined (Same as production)
+
+```bash
+./build.sh
+cd backend
+uvicorn main:app --reload --port 8000
+```
+
+Open: http://localhost:8000
 
 ---
 
-## 3. Test
+## Manual Deployment to Render
 
-1. Open https://payment-transactions.pages.dev
-2. Press F12 (DevTools)
-3. Look at Console - you should see:
+If you need to deploy manually:
+
+1. Go to https://dashboard.render.com
+2. Create **New Web Service**
+3. Connect your GitHub repo
+4. Settings:
    ```
-   🌐 API Base URL: https://payment-transactions.onrender.com/api
+   Name: payment-transactions
+   Environment: Python
+   Build Command: ./build.sh
+   Start Command: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
    ```
-4. Try to login
-
-If you see `localhost` in console → Redeploy on Cloudflare Pages
+5. Click **Create Web Service**
 
 ---
 
-## Quick Fix if Not Working
+## How It Works
 
-### Clear browser cache:
-1. F12 → Application tab
-2. Click "Clear storage"
-3. Click "Clear site data"
-4. Refresh page
-
-### Redeploy frontend:
-1. Cloudflare Pages → Deployments
-2. Click "Retry deployment" on latest build
+```
+User Request → Render.com
+              ↓
+         FastAPI Server
+         ├── /api/* → API endpoints
+         ├── /health → Health check
+         ├── /docs → Swagger UI
+         └── /* → Frontend files (React SPA)
+```
 
 ---
 
-That's it! 🚀
+## Troubleshooting
+
+### Frontend not loading?
+- Check build logs: `./build.sh` should complete without errors
+- Verify `frontend/dist` exists after build
+- Check Render logs for "✅ Serving frontend from: ..."
+
+### API not working?
+- API is at `/api` not `/api/api`
+- Frontend `.env.production` should have: `VITE_API_BASE_URL=/api`
+
+### 502 Bad Gateway?
+- Wait 1-2 minutes after deployment (cold start)
+- Check Render logs for errors
+- Verify health check: https://payment-transactions.onrender.com/health
+
+---
+
+## Cloudflare Pages No Longer Needed!
+
+You can **delete** the Cloudflare Pages project. Everything is now on Render.
+
+---
+
+That's it! One service, one URL, everything works. 🚀
