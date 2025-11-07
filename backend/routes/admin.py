@@ -6,7 +6,7 @@ from models import UserResponse, UserUpdate, TransactionWithCategory
 from database import db
 from security import get_current_user_from_token
 
-router = APIRouter(prefix="/api/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin", tags=["Admin"])
 
 class TransactionStatusUpdate(BaseModel):
     status: str  # 'completed' or 'failed'

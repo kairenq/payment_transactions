@@ -10,7 +10,7 @@ from security import (
     get_current_user_from_token
 )
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register")
 def register(user: UserRegister):

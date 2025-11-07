@@ -11,7 +11,7 @@ from models import (
 from database import db
 from security import get_current_user_from_token
 
-router = APIRouter(prefix="/api/transactions", tags=["Transactions"])
+router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 # ==================== КАТЕГОРИИ ====================
 

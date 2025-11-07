@@ -5,7 +5,7 @@ from models import StatsResponse, UserResponse
 from database import db
 from security import get_current_user_from_token
 
-router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/stats", response_model=StatsResponse)
 def get_user_statistics(
