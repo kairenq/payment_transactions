@@ -34,7 +34,9 @@
           "target": "nsis",
           "arch": ["x64"]
         }
-      ]
+      ],
+      "sign": false,
+      "signDlls": false
     },
     "nsis": {
       "oneClick": false,
