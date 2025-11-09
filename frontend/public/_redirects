@@ -1,0 +1,8 @@
+# Cloudflare Pages - SPA routing support
+# This ensures all routes are handled by React Router
+
+# API requests should NOT be redirected (they go to backend)
+/api/* 200
+
+# All other routes should serve index.html for client-side routing
+/* /index.html 200
