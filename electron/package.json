@@ -34,14 +34,10 @@
       "main.js"
     ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        }
-      ],
-      "sign": false,
-      "signDlls": false
+      "target": "nsis",
+      "certificateFile": null,
+      "certificatePassword": null,
+      "sign": null
     },
     "nsis": {
       "oneClick": true,
