@@ -1,0 +1,64 @@
+{
+  "name": "payment-transactions-desktop",
+  "version": "1.0.0",
+  "description": "Payment Transactions System - Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "pack": "electron-builder --dir"
+  },
+  "author": "Payment Transactions Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {},
+  "build": {
+    "appId": "com.payment-transactions.app",
+    "productName": "Payment Transactions",
+    "copyright": "Copyright © 2024",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "icon.png",
+      "../backend/**/*",
+      "../frontend/dist/**/*",
+      "!../backend/__pycache__",
+      "!../backend/*.pyc",
+      "!../backend/database.db"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Payment Transactions"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "icon.png",
+      "category": "public.app-category.finance"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "icon.png",
+      "category": "Finance"
+    }
+  }
+}
