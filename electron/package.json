@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Payment Transactions System - Desktop Application",
   "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kairenq/payment_transactions.git"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
@@ -22,6 +26,7 @@
     "appId": "com.payment-transactions.app",
     "productName": "Payment Transactions",
     "copyright": "Copyright © 2024",
+    "publish": null,
     "directories": {
       "output": "dist"
     },
